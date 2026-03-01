@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spam Detection System — University of Ha'il</title>
+<style>
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:    #0f172a;
+    --navy2:   #1e293b;
+    --navy3:   #334155;
+    --blue:    #3b82f6;
+    --blue2:   #60a5fa;
+    --blue3:   #93c5fd;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --amber:   #f59e0b;
+    --white:   #f8fafc;
+    --muted:   #94a3b8;
+    --border:  rgba(255,255,255,0.08);
+    --glass:   rgba(255,255,255,0.05);
+    --glass2:  rgba(255,255,255,0.09);
+    --radius:  14px;
+    --shadow:  0 8px 32px rgba(0,0,0,0.4);
+  }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { color: var(--blue2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { display: block; max-width: 100%; }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy2); }
+  ::-webkit-scrollbar-thumb { background: var(--navy3); border-radius: 3px; }
+
+  /* ===== UTILITIES ===== */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px; border-radius: 50px;
+    background: rgba(59,130,246,0.18);
+    color: var(--blue2);
+    border: 1px solid rgba(59,130,246,0.3);
+  }
+  .section-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 48px;
+  }
+  .glass-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 28px;
+  }
+  section { padding: 80px 0; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--blue), #6366f1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nav-logo-text { font-size: 14px; font-weight: 600; }
+  .nav-logo-sub { font-size: 11px; color: var(--muted); }
+  .nav-links { display: flex; gap: 24px; list-style: none; }
+  .nav-links a {
+    font-size: 13px; color: var(--muted); font-weight: 500; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); text-decoration: none; }
+
+  /* ===== HERO ===== */
+  #hero {
+    padding-top: 140px; padding-bottom: 100px;
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99,102,241,0.15) 0%, transparent 60%),
+      linear-gradient(180deg, #0f172a 0%, #0a1628 100%);
+  }
+  /* animated orbs */
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: 0.25;
+    animation: float 8s ease-in-out infinite;
+  }
+  .orb1 { width: 400px; height: 400px; background: var(--blue); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb2 { width: 300px; height: 300px; background: #6366f1; bottom: -80px; right: -60px; animation-delay: 4s; }
+  @keyframes float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-30px) scale(1.05); }
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-eyebrow { margin-bottom: 20px; }
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff 40%, var(--blue3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    color: var(--muted); font-size: 1.1rem; max-width: 620px;
+    margin: 0 auto 36px;
+  }
+  .hero-counter {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--glass2); border: 1px solid var(--border);
+    border-radius: 50px; padding: 10px 22px;
+    font-size: 14px; color: var(--blue3);
+    backdrop-filter: blur(8px);
+  }
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+  .hero-cta { margin-top: 36px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--blue); color: #fff; font-weight: 600;
+    padding: 13px 28px; border-radius: 10px; border: none;
+    cursor: pointer; font-size: 15px; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { background: var(--blue2); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.4); }
+  .btn-secondary {
+    background: var(--glass); color: var(--white); font-weight: 500;
+    padding: 13px 28px; border-radius: 10px; border: 1px solid var(--border);
+    cursor: pointer; font-size: 15px; transition: all 0.2s; backdrop-filter: blur(8px);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-secondary:hover { background: var(--glass2); transform: translateY(-1px); }
+
+  /* ===== ANALYZER SECTION ===== */
+  #analyzer { padding-top: 0; }
+  .analyzer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 768px) { .analyzer-grid { grid-template-columns: 1fr; } }
+  .input-panel label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+  .textarea-wrap { position: relative; }
+  #emailInput {
+    width: 100%; min-height: 220px; resize: vertical;
+    background: rgba(15,23,42,0.8);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--white); font-size: 14px; line-height: 1.7;
+    padding: 16px; font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  #emailInput:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+  #emailInput::placeholder { color: var(--navy3); }
+  .char-counter {
+    position: absolute; bottom: 10px; right: 14px;
+    font-size: 12px; color: var(--navy3); pointer-events: none;
+  }
+  .input-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn-analyze {
+    flex: 1; background: linear-gradient(135deg, var(--blue), #6366f1);
+    color: #fff; font-weight: 700; padding: 13px 20px;
+    border-radius: 10px; border: none; cursor: pointer; font-size: 15px;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-analyze:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.4); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-clear {
+    background: var(--glass); color: var(--muted);
+    padding: 13px 18px; border-radius: 10px; border: 1px solid var(--border);
+    cursor: pointer; font-size: 14px; transition: all 0.2s;
+  }
+  .btn-clear:hover { color: var(--white); background: var(--glass2); }
+  .example-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btn-example {
+    font-size: 12px; padding: 7px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .btn-example:hover { color: var(--white); border-color: var(--blue); }
+  .btn-example.spam-ex:hover { border-color: var(--red); color: #fca5a5; }
+  .btn-example.legit-ex:hover { border-color: var(--green); color: #86efac; }
+
+  /* Result panel */
+  .result-panel { display: flex; flex-direction: column; gap: 16px; }
+  .result-placeholder {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; text-align: center;
+    border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px;
+    color: var(--navy3); min-height: 220px;
+  }
+  .result-placeholder svg { opacity: 0.4; }
+  .result-card {
+    display: none; border-radius: var(--radius); padding: 28px;
+    border: 1px solid var(--border);
+    animation: fadeSlideUp 0.4s ease;
+  }
+  .result-card.spam-result { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+  .result-card.legit-result { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .result-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .result-icon.spam   { background: rgba(239,68,68,0.18); }
+  .result-icon.legit  { background: rgba(34,197,94,0.18); }
+  .result-verdict { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+  .result-verdict.spam  { color: #fca5a5; }
+  .result-verdict.legit { color: #86efac; }
+  .result-desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .confidence-bar-wrap { margin-bottom: 20px; }
+  .confidence-label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--muted); margin-bottom: 8px;
+  }
+  .confidence-label span:last-child { font-weight: 700; color: var(--white); }
+  .bar-track {
+    height: 8px; border-radius: 50px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 50px;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .bar-fill.spam  { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .bar-fill.legit { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .result-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .meta-item {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; text-align: center;
+  }
+  .meta-value { font-size: 1.1rem; font-weight: 700; }
+  .meta-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* spinner */
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== STATS CARDS ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+  .stat-card {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 20px;
+    text-align: center; position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue), #6366f1);
+  }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .stat-value {
+    font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em;
+    color: var(--blue2); line-height: 1;
+  }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+  .stat-sub { font-size: 11px; color: var(--navy3); margin-top: 4px; }
+
+  /* ===== WHY SECTION ===== */
+  .why-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+  @media (max-width: 640px) { .why-grid { grid-template-columns: 1fr; } }
+  .why-card {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 26px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .why-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .why-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 16px;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+  .why-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .why-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .why-stat { margin-top: 14px; font-size: 13px; color: var(--blue2); font-weight: 600; }
+
+  /* ===== COMPARISON TABLE ===== */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+  table {
+    width: 100%; border-collapse: collapse;
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  thead { background: rgba(255,255,255,0.05); }
+  th {
+    padding: 18px 20px; text-align: center;
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  th.highlight-col {
+    background: rgba(59,130,246,0.12);
+    color: var(--blue2);
+    border-bottom-color: rgba(59,130,246,0.3);
+  }
+  td {
+    padding: 16px 20px; text-align: center;
+    font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  td.highlight-col { background: rgba(59,130,246,0.07); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  tr:hover td.highlight-col { background: rgba(59,130,246,0.12); }
+  .table-note {
+    text-align: center; font-size: 13px; color: var(--muted);
+    margin-top: 18px; padding: 14px 20px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.15);
+    border-radius: 10px;
+  }
+  .table-note strong { color: var(--amber); }
+  .check-badge {
+    display: inline-block; padding: 3px 10px;
+    background: rgba(59,130,246,0.2); color: var(--blue2);
+    border-radius: 50px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; margin-left: 6px;
+  }
+  .col-label { font-size: 12px; color: var(--muted); }
+
+  /* ===== HOW IT WORKS ===== */
+  .pipeline {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; flex-wrap: wrap;
+  }
+  .pipeline-step {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 12px; padding: 24px 18px; text-align: center;
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: var(--radius); flex: 1; min-width: 160px; max-width: 220px;
+    transition: transform 0.2s;
+    position: relative;
+  }
+  .pipeline-step:hover { transform: translateY(-4px); }
+  .step-number {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 24px; background: var(--blue);
+    border-radius: 50%; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .step-title { font-size: 14px; font-weight: 700; }
+  .step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .pipeline-arrow {
+    font-size: 20px; color: var(--blue); padding: 0 4px;
+    flex-shrink: 0; margin-top: -12px;
+  }
+  @media (max-width: 700px) {
+    .pipeline { flex-direction: column; }
+    .pipeline-arrow { transform: rotate(90deg); }
+  }
+  .result-step .step-icon { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.2); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    background: rgba(10,14,26,0.9);
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+    text-align: center;
+  }
+  .footer-logo { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .footer-sub { font-size: 13px; color: var(--muted); }
+  .footer-links { display: flex; justify-content: center; gap: 24px; margin-top: 20px; }
+  .footer-links a { font-size: 13px; color: var(--muted); transition: color 0.2s; }
+  .footer-links a:hover { color: var(--white); text-decoration: none; }
+  .footer-divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .footer-copy { font-size: 12px; color: var(--navy3); }
+
+  /* ===== SECTION HEADER ===== */
+  .section-header { text-align: center; margin-bottom: 56px; }
+
+  /* ===== LOADING OVERLAY ===== */
+  #loading-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(15,23,42,0.7); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  #loading-overlay.show { display: flex; }
+  .loading-box {
+    background: var(--navy2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px 60px; text-align: center;
+  }
+  .big-spinner {
+    width: 48px; height: 48px; margin: 0 auto 16px;
+    border: 3px solid rgba(59,130,246,0.3);
+    border-top-color: var(--blue); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">🛡️</div>
+      <div>
+        <div class="nav-logo-text">SpamShield AI</div>
+        <div class="nav-logo-sub">University of Ha'il</div>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#analyzer">Analyzer</a></li>
+      <li><a href="#performance">Performance</a></li>
+      <li><a href="#comparison">Comparison</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ===== SECTION 1: HERO ===== -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+  </div>
+  <div class="container hero-content">
+    <div class="hero-eyebrow">
+      <span class="badge">🎓 University of Ha'il &nbsp;·&nbsp; College of Computer Science &amp; Engineering</span>
+    </div>
+    <h1 class="hero-title">
+      Efficient Filtering of Email Messages<br>
+      for Real-Time Spam Identification
+    </h1>
+    <p class="hero-sub">
+      A production-ready spam detection system powered by TF-IDF feature extraction
+      and Random Forest classification — trained on 193,850 real-world emails.
+    </p>
+    <div class="hero-counter">
+      <span class="pulse-dot"></span>
+      <strong id="heroCounter">0</strong>&nbsp;emails analyzed in training
+    </div>
+    <div class="hero-cta">
+      <a href="#analyzer" class="btn-primary">
+        ⚡ Try the Analyzer
+      </a>
+      <a href="#performance" class="btn-secondary">
+        📊 View Performance
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 2: ANALYZER ===== -->
+<section id="analyzer">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Live Demo</span>
+      <h2 class="section-title" style="margin-top:14px;">Email Spam Analyzer</h2>
+      <p class="section-sub">Paste any email and get an instant AI-powered verdict with confidence score.</p>
+    </div>
+    <div class="analyzer-grid">
+      <!-- Input -->
+      <div class="input-panel">
+        <label for="emailInput">Email Content</label>
+        <div class="textarea-wrap">
+          <textarea id="emailInput" placeholder="Paste your email content here...&#10;&#10;Subject, headers, body — any format works."></textarea>
+          <span class="char-counter" id="charCounter">0 chars</span>
+        </div>
+        <div class="input-actions">
+          <button class="btn-analyze" id="analyzeBtn" onclick="analyzeEmail()">
+            <div class="spinner" id="btnSpinner"></div>
+            <span id="btnText">⚡ Analyze Email</span>
+          </button>
+          <button class="btn-clear" onclick="clearInput()">✕ Clear</button>
+        </div>
+        <div class="example-btns">
+          <button class="btn-example spam-ex" onclick="fillSpam()">🔴 Try Spam Example</button>
+          <button class="btn-example legit-ex" onclick="fillLegit()">🟢 Try Legitimate Example</button>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-panel">
+        <div class="result-placeholder" id="resultPlaceholder">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <strong style="color:var(--muted)">Awaiting Analysis</strong>
+            <p style="font-size:13px;color:var(--navy3);margin-top:4px;">
+              Enter an email and click "Analyze Email"
+            </p>
+          </div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+          <div class="result-header">
+            <div class="result-icon" id="resultIcon">❓</div>
+            <div>
+              <div class="result-verdict" id="resultVerdict">—</div>
+              <div class="result-desc" id="resultDesc">—</div>
+            </div>
+          </div>
+
+          <div class="confidence-bar-wrap">
+            <div class="confidence-label">
+              <span>Confidence Score</span>
+              <span id="confLabel">—%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="confBar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="result-meta">
+            <div class="meta-item">
+              <div class="meta-value" id="metaConf">—</div>
+              <div class="meta-label">Confidence</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-value" id="metaWords">—</div>
+              <div class="meta-label">Words</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-value" id="metaTime">—</div>
+              <div class="meta-label">Process Time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 3: PERFORMANCE ===== -->
+<section id="performance" style="background: linear-gradient(180deg, transparent, rgba(59,130,246,0.04), transparent);">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Model Performance</span>
+      <h2 class="section-title" style="margin-top:14px;">Production-Grade Results</h2>
+      <p class="section-sub">Validated on 193,850 real-world emails across multiple evaluation metrics.</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value"><span class="count-up" data-target="96.31" data-dec="2">0</span>%</div>
+        <div class="stat-label">Accuracy</div>
+        <div class="stat-sub">TF-IDF + Random Forest</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><span class="count-up" data-target="6.06" data-dec="2">0</span>%</div>
+        <div class="stat-label">False Positive Rate</div>
+        <div class="stat-sub">Legitimate emails misflagged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><span class="count-up" data-target="193850" data-dec="0">0</span></div>
+        <div class="stat-label">Dataset Size</div>
+        <div class="stat-sub">Real-world email samples</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><span class="count-up" data-target="378" data-dec="0">0</span>s</div>
+        <div class="stat-label">Training Time</div>
+        <div class="stat-sub">On standard hardware</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 4: WHY ===== -->
+<section id="why">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Architecture</span>
+      <h2 class="section-title" style="margin-top:14px;">Why TF-IDF + Random Forest?</h2>
+      <p class="section-sub">The optimal balance between accuracy, speed, and resource efficiency for real-world deployment.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <div class="why-title">Real-Time Speed</div>
+        <div class="why-desc">
+          Instant classification with sub-millisecond inference. Processes emails as fast as they arrive
+          without queuing or batching overhead.
+        </div>
+        <div class="why-stat">TF-IDF + RF: &lt;1ms &nbsp;vs&nbsp; LSTM: ~50ms per email</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🖥️</div>
+        <div class="why-title">Lower Resource Usage</div>
+        <div class="why-desc">
+          Runs efficiently on commodity hardware. No specialized GPU infrastructure required,
+          dramatically reducing operational costs.
+        </div>
+        <div class="why-stat">4 GB RAM &nbsp;vs&nbsp; 8 GB for Deep Learning</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🎯</div>
+        <div class="why-title">High Accuracy</div>
+        <div class="why-desc">
+          Achieves 96.31% classification accuracy on a diverse dataset of 193,850 emails —
+          competitive with much heavier deep learning models.
+        </div>
+        <div class="why-stat">96.31% on 193,850 emails · FPR 6.06%</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔧</div>
+        <div class="why-title">No GPU Required</div>
+        <div class="why-desc">
+          Entire training and inference pipeline runs on standard CPU hardware.
+          Deployable anywhere — edge servers, cloud VMs, or on-premises.
+        </div>
+        <div class="why-stat">Standard CPU · scikit-learn · No CUDA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 5: COMPARISON TABLE ===== -->
+<section id="comparison" style="background: linear-gradient(180deg, transparent, rgba(59,130,246,0.03), transparent);">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Model Comparison</span>
+      <h2 class="section-title" style="margin-top:14px;">Algorithm Evaluation</h2>
+      <p class="section-sub">Three approaches benchmarked on identical datasets under controlled conditions.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;">Metric</th>
+            <th>Bag-of-Words + RF</th>
+            <th class="highlight-col">TF-IDF + RF <span class="check-badge">OUR CHOICE ✓</span></th>
+            <th>LSTM Deep Learning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Accuracy</td>
+            <td>96.23%</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">96.31%</td>
+            <td>98.47%</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">False Positive Rate</td>
+            <td>6.18%</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">6.06%</td>
+            <td>1.37%</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Training Time</td>
+            <td>376 seconds</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">378 seconds</td>
+            <td>~115.5 minutes</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Inference Speed</td>
+            <td>&lt;1 ms</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">&lt;1 ms</td>
+            <td>~50 ms</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Memory (RAM)</td>
+            <td>~4 GB</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">~4 GB</td>
+            <td>~8 GB</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">GPU Required</td>
+            <td>No</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">No</td>
+            <td>Yes (recommended)</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Deployability</td>
+            <td>Any server</td>
+            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">Any server</td>
+            <td>GPU server</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-note">
+      <strong>⚠️ Note on LSTM:</strong>
+      LSTM achieves 2.16% higher accuracy but requires <strong>18× longer training</strong> and <strong>2× more memory</strong> —
+      making TF-IDF + Random Forest the pragmatic production choice.
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 6: HOW IT WORKS ===== -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Pipeline</span>
+      <h2 class="section-title" style="margin-top:14px;">How It Works</h2>
+      <p class="section-sub">Four deterministic steps from raw email to classification decision.</p>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-number">1</div>
+        <div class="step-icon">📧</div>
+        <div class="step-title">Email Input</div>
+        <div class="step-desc">Raw email text is received — subject, headers, and body in any format.</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-number">2</div>
+        <div class="step-icon">🧹</div>
+        <div class="step-title">Text Preprocessing</div>
+        <div class="step-desc">Lowercasing, URL/email removal, special character stripping, whitespace normalization.</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-number">3</div>
+        <div class="step-icon">📐</div>
+        <div class="step-title">TF-IDF Extraction</div>
+        <div class="step-desc">5,000-feature TF-IDF vector with 1–2 n-grams captures word importance across the corpus.</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-number">4</div>
+        <div class="step-icon">🌲</div>
+        <div class="step-title">Random Forest</div>
+        <div class="step-desc">Ensemble of decision trees votes on the TF-IDF vector to produce a confident prediction.</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step result-step">
+        <div class="step-number">✓</div>
+        <div class="step-icon">🏷️</div>
+        <div class="step-title">Classification</div>
+        <div class="step-desc">Spam or Legitimate verdict with probability confidence score, sub-millisecond latency.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 7: FOOTER ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-logo">🎓 University of Ha'il</div>
+    <div class="footer-sub">
+      College of Computer Science and Engineering · Department of Information Security · 2025–2026
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/" target="_blank" rel="noopener">⭐ GitHub Repository</a>
+      <a href="#hero">↑ Back to Top</a>
+      <a href="#analyzer">⚡ Analyzer</a>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy">
+      "Efficient Filtering of Email Messages for Real-Time Spam Identification" ·
+      TF-IDF + Random Forest · scikit-learn · Flask
+    </div>
+  </div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  /* ---- Hero counter animation ---- */
+  (function () {
+    const el = document.getElementById('heroCounter');
+    const target = 193850;
+    const duration = 2200;
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 4);
+      el.textContent = Math.round(ease * target).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  })();
+
+  /* ---- Scroll-triggered count-up for stats ---- */
+  const countEls = document.querySelectorAll('.count-up');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.done) {
+        entry.target.dataset.done = '1';
+        animateCount(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  countEls.forEach(el => observer.observe(el));
+
+  function animateCount(el) {
+    const target = parseFloat(el.dataset.target);
+    const dec = parseInt(el.dataset.dec) || 0;
+    const duration = 1800;
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const val = ease * target;
+      el.textContent = dec > 0
+        ? val.toFixed(dec)
+        : Math.round(val).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- Character counter ---- */
+  const emailInput = document.getElementById('emailInput');
+  const charCounter = document.getElementById('charCounter');
+  emailInput.addEventListener('input', () => {
+    const len = emailInput.value.length;
+    charCounter.textContent = len.toLocaleString() + ' chars';
+    charCounter.style.color = len > 5000 ? '#ef4444' : 'var(--navy3)';
+  });
+
+  /* ---- Example content ---- */
+  const SPAM_EXAMPLE = `Subject: CONGRATULATIONS! You've won a $1,000 Amazon Gift Card!
+
+Dear Winner,
+
+You have been selected as our LUCKY WINNER of this week's Amazon Gift Card giveaway!
+
+Click HERE to claim your FREE $1,000 prize NOW before it expires!!!
+
+https://claim-prize-free.xyz/winner?id=8472637
+
+Hurry! This offer EXPIRES in 24 HOURS. You must act NOW!
+
+To unsubscribe from future offers, click here.
+
+Best regards,
+The Prize Notification Team
+prize-notifications@deals-winner.com`;
+
+  const LEGIT_EXAMPLE = `Subject: Team Meeting Agenda - Q1 Planning Session
+
+Hi everyone,
+
+I wanted to share the agenda for tomorrow's Q1 planning session scheduled for 2:00 PM in Conference Room B.
+
+Agenda items:
+1. Review of Q4 2025 performance metrics (15 min)
+2. Department budget allocation for Q1 (20 min)
+3. Product roadmap priorities (25 min)
+4. Action items and assignments (10 min)
+
+Please review the attached spreadsheet before the meeting. If you have any items to add to the agenda, reply to this email by end of day today.
+
+Looking forward to a productive session.
+
+Best regards,
+Sarah Mitchell
+Project Manager | Engineering Division
+sarah.mitchell@company.com | ext. 4821`;
+
+  function fillSpam() {
+    emailInput.value = SPAM_EXAMPLE;
+    emailInput.dispatchEvent(new Event('input'));
+    emailInput.focus();
+  }
+  function fillLegit() {
+    emailInput.value = LEGIT_EXAMPLE;
+    emailInput.dispatchEvent(new Event('input'));
+    emailInput.focus();
+  }
+  function clearInput() {
+    emailInput.value = '';
+    emailInput.dispatchEvent(new Event('input'));
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('resultPlaceholder').style.display = 'flex';
+    emailInput.focus();
+  }
+
+  /* ---- Analyze ---- */
+  async function analyzeEmail() {
+    const text = emailInput.value.trim();
+    if (!text) {
+      emailInput.focus();
+      emailInput.style.borderColor = 'var(--red)';
+      setTimeout(() => emailInput.style.borderColor = '', 1000);
+      return;
+    }
+
+    const btn = document.getElementById('analyzeBtn');
+    const spinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Analyzing...';
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: text })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Server error');
+      }
+
+      const data = await res.json();
+      showResult(data);
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = '⚡ Analyze Email';
+    }
+  }
+
+  function showResult(data) {
+    const isSpam = data.result === 'spam';
+    const card = document.getElementById('resultCard');
+    const placeholder = document.getElementById('resultPlaceholder');
+
+    placeholder.style.display = 'none';
+    card.style.display = 'block';
+    card.className = 'result-card ' + (isSpam ? 'spam-result' : 'legit-result');
+
+    document.getElementById('resultIcon').textContent   = isSpam ? '🚨' : '✅';
+    document.getElementById('resultIcon').className     = 'result-icon ' + (isSpam ? 'spam' : 'legit');
+    document.getElementById('resultVerdict').textContent = isSpam ? 'SPAM DETECTED' : 'LEGITIMATE EMAIL';
+    document.getElementById('resultVerdict').className   = 'result-verdict ' + (isSpam ? 'spam' : 'legit');
+    document.getElementById('resultDesc').textContent    = isSpam
+      ? 'This email shows characteristics typical of spam.'
+      : 'This email appears to be legitimate.';
+
+    const conf = data.confidence.toFixed(2);
+    document.getElementById('confLabel').textContent = conf + '%';
+    const bar = document.getElementById('confBar');
+    bar.className = 'bar-fill ' + (isSpam ? 'spam' : 'legit');
+    setTimeout(() => { bar.style.width = conf + '%'; }, 50);
+
+    document.getElementById('metaConf').textContent  = conf + '%';
+    document.getElementById('metaWords').textContent = data.word_count.toLocaleString();
+    document.getElementById('metaTime').textContent  = data.processing_time_ms + 'ms';
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ---- Enter key shortcut ---- */
+  emailInput.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') analyzeEmail();
+  });
+</script>
+</body>
+</html>
