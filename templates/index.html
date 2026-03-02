@@ -3,865 +3,1138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spam Detection System — University of Ha'il</title>
+<title>SpamShield AI — Real-Time Email Spam Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* ===== RESET & BASE ===== */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --navy:    #0f172a;
-    --navy2:   #1e293b;
-    --navy3:   #334155;
-    --blue:    #3b82f6;
-    --blue2:   #60a5fa;
-    --blue3:   #93c5fd;
-    --green:   #22c55e;
-    --red:     #ef4444;
-    --amber:   #f59e0b;
-    --white:   #f8fafc;
-    --muted:   #94a3b8;
-    --border:  rgba(255,255,255,0.08);
-    --glass:   rgba(255,255,255,0.05);
-    --glass2:  rgba(255,255,255,0.09);
-    --radius:  14px;
-    --shadow:  0 8px 32px rgba(0,0,0,0.4);
-  }
-  html { scroll-behavior: smooth; font-size: 16px; }
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--navy);
-    color: var(--white);
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-  a { color: var(--blue2); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  img { display: block; max-width: 100%; }
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ===== SCROLLBAR ===== */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--navy2); }
-  ::-webkit-scrollbar-thumb { background: var(--navy3); border-radius: 3px; }
+:root {
+  --bg-0:   #0D0F12;
+  --bg-1:   #11151A;
+  --bg-card:#161A20;
+  --border: #1F242C;
+  --text-primary:   #E5E7EB;
+  --text-secondary: #9CA3AF;
+  --text-dim:       #4B5563;
+  --blue:   #3B82F6;
+  --green:  #00FF95;
+  --red:    #FF3B3B;
+  --radius: 12px;
+  --shadow: 0 0 20px rgba(0,0,0,0.3);
+}
 
-  /* ===== UTILITIES ===== */
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-  .badge {
-    display: inline-block;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 4px 12px; border-radius: 50px;
-    background: rgba(59,130,246,0.18);
-    color: var(--blue2);
-    border: 1px solid rgba(59,130,246,0.3);
-  }
-  .section-title {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .section-sub {
-    color: var(--muted);
-    font-size: 1rem;
-    margin-bottom: 48px;
-  }
-  .glass-card {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 28px;
-  }
-  section { padding: 80px 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
 
-  /* ===== NAV ===== */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(15,23,42,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 0;
-  }
-  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-logo { display: flex; align-items: center; gap: 10px; }
-  .nav-logo-icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--blue), #6366f1);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .nav-logo-text { font-size: 14px; font-weight: 600; }
-  .nav-logo-sub { font-size: 11px; color: var(--muted); }
-  .nav-links { display: flex; gap: 24px; list-style: none; }
-  .nav-links a {
-    font-size: 13px; color: var(--muted); font-weight: 500; transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--white); text-decoration: none; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-0);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
 
-  /* ===== HERO ===== */
-  #hero {
-    padding-top: 140px; padding-bottom: 100px;
-    position: relative; overflow: hidden;
-    text-align: center;
-  }
-  .hero-bg {
-    position: absolute; inset: 0; z-index: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.22) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99,102,241,0.15) 0%, transparent 60%),
-      linear-gradient(180deg, #0f172a 0%, #0a1628 100%);
-  }
-  /* animated orbs */
-  .orb {
-    position: absolute; border-radius: 50%;
-    filter: blur(60px); opacity: 0.25;
-    animation: float 8s ease-in-out infinite;
-  }
-  .orb1 { width: 400px; height: 400px; background: var(--blue); top: -100px; left: -100px; animation-delay: 0s; }
-  .orb2 { width: 300px; height: 300px; background: #6366f1; bottom: -80px; right: -60px; animation-delay: 4s; }
-  @keyframes float {
-    0%,100% { transform: translateY(0) scale(1); }
-    50%      { transform: translateY(-30px) scale(1.05); }
-  }
-  .hero-content { position: relative; z-index: 1; }
-  .hero-eyebrow { margin-bottom: 20px; }
-  .hero-title {
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 800; line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #fff 40%, var(--blue3));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero-sub {
-    color: var(--muted); font-size: 1.1rem; max-width: 620px;
-    margin: 0 auto 36px;
-  }
-  .hero-counter {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: var(--glass2); border: 1px solid var(--border);
-    border-radius: 50px; padding: 10px 22px;
-    font-size: 14px; color: var(--blue3);
-    backdrop-filter: blur(8px);
-  }
-  .pulse-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
-    70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
-  }
-  .hero-cta { margin-top: 36px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  .btn-primary {
-    background: var(--blue); color: #fff; font-weight: 600;
-    padding: 13px 28px; border-radius: 10px; border: none;
-    cursor: pointer; font-size: 15px; transition: all 0.2s;
-    display: inline-flex; align-items: center; gap: 8px;
-  }
-  .btn-primary:hover { background: var(--blue2); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.4); }
-  .btn-secondary {
-    background: var(--glass); color: var(--white); font-weight: 500;
-    padding: 13px 28px; border-radius: 10px; border: 1px solid var(--border);
-    cursor: pointer; font-size: 15px; transition: all 0.2s; backdrop-filter: blur(8px);
-    display: inline-flex; align-items: center; gap: 8px;
-  }
-  .btn-secondary:hover { background: var(--glass2); transform: translateY(-1px); }
+/* Subtle noise / dot texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
 
-  /* ===== ANALYZER SECTION ===== */
-  #analyzer { padding-top: 0; }
-  .analyzer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-  @media (max-width: 768px) { .analyzer-grid { grid-template-columns: 1fr; } }
-  .input-panel label {
-    display: block; font-size: 13px; font-weight: 600;
-    color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
-    margin-bottom: 10px;
-  }
-  .textarea-wrap { position: relative; }
-  #emailInput {
-    width: 100%; min-height: 220px; resize: vertical;
-    background: rgba(15,23,42,0.8);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    color: var(--white); font-size: 14px; line-height: 1.7;
-    padding: 16px; font-family: inherit;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  #emailInput:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-  #emailInput::placeholder { color: var(--navy3); }
-  .char-counter {
-    position: absolute; bottom: 10px; right: 14px;
-    font-size: 12px; color: var(--navy3); pointer-events: none;
-  }
-  .input-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-  .btn-analyze {
-    flex: 1; background: linear-gradient(135deg, var(--blue), #6366f1);
-    color: #fff; font-weight: 700; padding: 13px 20px;
-    border-radius: 10px; border: none; cursor: pointer; font-size: 15px;
-    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-analyze:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.4); }
-  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .btn-clear {
-    background: var(--glass); color: var(--muted);
-    padding: 13px 18px; border-radius: 10px; border: 1px solid var(--border);
-    cursor: pointer; font-size: 14px; transition: all 0.2s;
-  }
-  .btn-clear:hover { color: var(--white); background: var(--glass2); }
-  .example-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .btn-example {
-    font-size: 12px; padding: 7px 14px; border-radius: 8px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--muted); cursor: pointer; transition: all 0.2s; font-family: inherit;
-  }
-  .btn-example:hover { color: var(--white); border-color: var(--blue); }
-  .btn-example.spam-ex:hover { border-color: var(--red); color: #fca5a5; }
-  .btn-example.legit-ex:hover { border-color: var(--green); color: #86efac; }
+section, nav, footer, .result-card, .result-placeholder,
+.processing-overlay, .analyzer-card { position: relative; z-index: 1; }
 
-  /* Result panel */
-  .result-panel { display: flex; flex-direction: column; gap: 16px; }
-  .result-placeholder {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 14px; text-align: center;
-    border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px;
-    color: var(--navy3); min-height: 220px;
-  }
-  .result-placeholder svg { opacity: 0.4; }
-  .result-card {
-    display: none; border-radius: var(--radius); padding: 28px;
-    border: 1px solid var(--border);
-    animation: fadeSlideUp 0.4s ease;
-  }
-  .result-card.spam-result { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
-  .result-card.legit-result { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); }
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-  .result-icon {
-    width: 52px; height: 52px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
-  }
-  .result-icon.spam   { background: rgba(239,68,68,0.18); }
-  .result-icon.legit  { background: rgba(34,197,94,0.18); }
-  .result-verdict { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
-  .result-verdict.spam  { color: #fca5a5; }
-  .result-verdict.legit { color: #86efac; }
-  .result-desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
-  .confidence-bar-wrap { margin-bottom: 20px; }
-  .confidence-label {
-    display: flex; justify-content: space-between;
-    font-size: 13px; color: var(--muted); margin-bottom: 8px;
-  }
-  .confidence-label span:last-child { font-weight: 700; color: var(--white); }
-  .bar-track {
-    height: 8px; border-radius: 50px;
-    background: rgba(255,255,255,0.08);
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%; border-radius: 50px;
-    transition: width 0.8s cubic-bezier(.4,0,.2,1);
-  }
-  .bar-fill.spam  { background: linear-gradient(90deg, #ef4444, #f87171); }
-  .bar-fill.legit { background: linear-gradient(90deg, #22c55e, #4ade80); }
-  .result-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-  .meta-item {
-    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px; text-align: center;
-  }
-  .meta-value { font-size: 1.1rem; font-weight: 700; }
-  .meta-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+::selection { background: var(--green); color: #000; }
 
-  /* spinner */
-  .spinner {
-    width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff; border-radius: 50%;
-    animation: spin 0.7s linear infinite; display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-  /* ===== STATS CARDS ===== */
-  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
-  @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
-  @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
-  .stat-card {
-    background: var(--glass); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 28px 20px;
-    text-align: center; position: relative; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .stat-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--blue), #6366f1);
-  }
-  .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-  .stat-value {
-    font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em;
-    color: var(--blue2); line-height: 1;
-  }
-  .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
-  .stat-sub { font-size: 11px; color: var(--navy3); margin-top: 4px; }
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #374151; }
 
-  /* ===== WHY SECTION ===== */
-  .why-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-  @media (max-width: 640px) { .why-grid { grid-template-columns: 1fr; } }
-  .why-card {
-    background: var(--glass); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 26px;
-    transition: transform 0.2s, box-shadow 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .why-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-  .why-icon {
-    width: 48px; height: 48px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; margin-bottom: 16px;
-    background: rgba(59,130,246,0.12);
-    border: 1px solid rgba(59,130,246,0.2);
-  }
-  .why-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-  .why-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
-  .why-stat { margin-top: 14px; font-size: 13px; color: var(--blue2); font-weight: 600; }
+/* ===== UTILITIES ===== */
+.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+section { padding: 90px 0; }
 
-  /* ===== COMPARISON TABLE ===== */
-  .table-wrap { overflow-x: auto; border-radius: var(--radius); }
-  table {
-    width: 100%; border-collapse: collapse;
-    background: var(--glass); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
-  }
-  thead { background: rgba(255,255,255,0.05); }
-  th {
-    padding: 18px 20px; text-align: center;
-    font-size: 13px; font-weight: 700; color: var(--muted);
-    letter-spacing: 0.04em; text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
-  th.highlight-col {
-    background: rgba(59,130,246,0.12);
-    color: var(--blue2);
-    border-bottom-color: rgba(59,130,246,0.3);
-  }
-  td {
-    padding: 16px 20px; text-align: center;
-    font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
-  }
-  td.highlight-col { background: rgba(59,130,246,0.07); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.03); }
-  tr:hover td.highlight-col { background: rgba(59,130,246,0.12); }
-  .table-note {
-    text-align: center; font-size: 13px; color: var(--muted);
-    margin-top: 18px; padding: 14px 20px;
-    background: rgba(245,158,11,0.06);
-    border: 1px solid rgba(245,158,11,0.15);
-    border-radius: 10px;
-  }
-  .table-note strong { color: var(--amber); }
-  .check-badge {
-    display: inline-block; padding: 3px 10px;
-    background: rgba(59,130,246,0.2); color: var(--blue2);
-    border-radius: 50px; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.06em; margin-left: 6px;
-  }
-  .col-label { font-size: 12px; color: var(--muted); }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 5px 14px; border-radius: 50px;
+  background: rgba(59,130,246,0.1); color: var(--blue);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.badge-green {
+  background: rgba(0,255,149,0.07); color: var(--green);
+  border-color: rgba(0,255,149,0.18);
+}
 
-  /* ===== HOW IT WORKS ===== */
-  .pipeline {
-    display: flex; align-items: center; justify-content: center;
-    gap: 0; flex-wrap: wrap;
-  }
-  .pipeline-step {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 12px; padding: 24px 18px; text-align: center;
-    background: var(--glass); border: 1px solid var(--border);
-    border-radius: var(--radius); flex: 1; min-width: 160px; max-width: 220px;
-    transition: transform 0.2s;
-    position: relative;
-  }
-  .pipeline-step:hover { transform: translateY(-4px); }
-  .step-number {
-    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    width: 24px; height: 24px; background: var(--blue);
-    border-radius: 50%; font-size: 11px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .step-icon {
-    width: 56px; height: 56px; border-radius: 14px;
-    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
-  }
-  .step-title { font-size: 14px; font-weight: 700; }
-  .step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  .pipeline-arrow {
-    font-size: 20px; color: var(--blue); padding: 0 4px;
-    flex-shrink: 0; margin-top: -12px;
-  }
-  @media (max-width: 700px) {
-    .pipeline { flex-direction: column; }
-    .pipeline-arrow { transform: rotate(90deg); }
-  }
-  .result-step .step-icon { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.2); }
+.section-header { text-align: center; margin-bottom: 56px; }
+.section-tag { margin-bottom: 16px; }
+.section-title {
+  font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 800;
+  letter-spacing: -0.02em; margin-bottom: 12px;
+}
+.section-sub {
+  color: var(--text-secondary); font-size: 1rem;
+  max-width: 560px; margin: 0 auto;
+}
 
-  /* ===== FOOTER ===== */
-  footer {
-    background: rgba(10,14,26,0.9);
-    border-top: 1px solid var(--border);
-    padding: 40px 0;
-    text-align: center;
-  }
-  .footer-logo { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-  .footer-sub { font-size: 13px; color: var(--muted); }
-  .footer-links { display: flex; justify-content: center; gap: 24px; margin-top: 20px; }
-  .footer-links a { font-size: 13px; color: var(--muted); transition: color 0.2s; }
-  .footer-links a:hover { color: var(--white); text-decoration: none; }
-  .footer-divider { height: 1px; background: var(--border); margin: 24px 0; }
-  .footer-copy { font-size: 12px; color: var(--navy3); }
+/* ===== NAV ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(13,15,18,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; height: 64px;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+}
+.nav-logo:hover { text-decoration: none; }
+.nav-logo-icon {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  box-shadow: 0 0 14px rgba(59,130,246,0.35);
+}
+.nav-logo-name {
+  font-size: 15px; font-weight: 700; color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.nav-links {
+  display: flex; align-items: center; gap: 2px; list-style: none;
+}
+.nav-links a {
+  font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  padding: 6px 13px; border-radius: 8px;
+  transition: color 0.2s, background 0.2s; text-decoration: none;
+}
+.nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); text-decoration: none; }
+.nav-links a.active { color: var(--green); background: rgba(0,255,149,0.07); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-github {
+  display: flex; align-items: center; gap: 6px; font-size: 12px;
+  color: var(--text-secondary); padding: 6px 12px; border-radius: 8px;
+  border: 1px solid var(--border); transition: color 0.2s, border-color 0.2s;
+  text-decoration: none;
+}
+.nav-github:hover { color: var(--text-primary); border-color: #374151; text-decoration: none; }
+.btn-nav-cta {
+  background: var(--blue); color: #fff; font-weight: 600;
+  padding: 8px 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  display: inline-flex; align-items: center;
+  transition: all 0.2s; text-decoration: none;
+}
+.btn-nav-cta:hover {
+  background: #2563eb; text-decoration: none; color: #fff;
+  transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+}
+@media (max-width: 768px) { .nav-links, .nav-github { display: none; } }
 
-  /* ===== SECTION HEADER ===== */
-  .section-header { text-align: center; margin-bottom: 56px; }
+/* ===== HERO ===== */
+#hero {
+  padding-top: 160px; padding-bottom: 110px;
+  position: relative; overflow: hidden; text-align: center;
+  background: linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 100%);
+}
+.hero-grid {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,255,149,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,149,0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
+}
+.hero-glow {
+  position: absolute; z-index: 0; border-radius: 50%;
+  filter: blur(90px); pointer-events: none;
+}
+.hero-glow-blue {
+  width: 560px; height: 400px;
+  background: rgba(59,130,246,0.1);
+  top: -120px; left: 50%; transform: translateX(-50%);
+}
+.hero-glow-green {
+  width: 260px; height: 260px;
+  background: rgba(0,255,149,0.07);
+  bottom: 0; right: 15%;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-eyebrow { margin-bottom: 28px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,255,149,0.06); border: 1px solid rgba(0,255,149,0.14);
+  border-radius: 50px; padding: 8px 18px;
+  font-size: 13px; color: var(--green); font-weight: 500;
+}
+.pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(0,255,149,0.6);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,255,149,0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(0,255,149,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,255,149,0); }
+}
+.hero-title {
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-weight: 900; line-height: 1.08; letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #D1D5DB 55%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  color: var(--text-secondary); font-size: 1.1rem;
+  max-width: 580px; margin: 0 auto 40px;
+}
+.hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
-  /* ===== LOADING OVERLAY ===== */
-  #loading-overlay {
-    display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(15,23,42,0.7); backdrop-filter: blur(4px);
-    align-items: center; justify-content: center;
-  }
-  #loading-overlay.show { display: flex; }
-  .loading-box {
-    background: var(--navy2); border: 1px solid var(--border);
-    border-radius: 20px; padding: 40px 60px; text-align: center;
-  }
-  .big-spinner {
-    width: 48px; height: 48px; margin: 0 auto 16px;
-    border: 3px solid rgba(59,130,246,0.3);
-    border-top-color: var(--blue); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+.btn-primary {
+  background: var(--blue); color: #fff; font-weight: 700;
+  padding: 14px 28px; border-radius: 10px; border: none;
+  font-size: 15px; font-family: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.2s; text-decoration: none;
+}
+.btn-primary:hover {
+  background: #2563eb; transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(59,130,246,0.4); color: #fff; text-decoration: none;
+}
+.btn-outline {
+  background: transparent; color: var(--text-primary); font-weight: 600;
+  padding: 14px 28px; border-radius: 10px; border: 1px solid var(--border);
+  font-size: 15px; font-family: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.2s; text-decoration: none;
+}
+.btn-outline:hover {
+  background: rgba(255,255,255,0.05); border-color: #374151;
+  transform: translateY(-2px); color: var(--text-primary); text-decoration: none;
+}
+
+/* ===== ANALYZER ===== */
+#analyzer {
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.analyzer-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: var(--shadow); padding: 32px;
+}
+.analyzer-layout {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+}
+@media (max-width: 800px) { .analyzer-layout { grid-template-columns: 1fr; } }
+
+.field-label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.09em; margin-bottom: 10px;
+}
+.textarea-wrap { position: relative; }
+#emailInput {
+  width: 100%; min-height: 240px; resize: vertical;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text-primary);
+  font-size: 13px; line-height: 1.75; padding: 14px 16px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+}
+#emailInput::placeholder { color: var(--text-dim); }
+#emailInput:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+.char-counter {
+  position: absolute; bottom: 10px; right: 12px; font-size: 11px;
+  color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
+  pointer-events: none;
+}
+.input-actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn-analyze {
+  flex: 1; background: var(--green); color: #000;
+  font-weight: 700; padding: 12px 20px; border-radius: 10px;
+  border: none; cursor: pointer; font-size: 14px; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+.btn-analyze:hover {
+  background: #00e887; transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(0,255,149,0.38);
+}
+.btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-clear {
+  background: rgba(255,255,255,0.05); color: var(--text-secondary);
+  padding: 12px 18px; border-radius: 10px; border: 1px solid var(--border);
+  cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s;
+}
+.btn-clear:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.example-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn-example {
+  font-size: 12px; padding: 6px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-secondary); cursor: pointer;
+  transition: all 0.2s; font-family: inherit;
+}
+.btn-spam-ex:hover { border-color: var(--red); color: var(--red); background: rgba(255,59,59,0.06); }
+.btn-legit-ex:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,149,0.06); }
+
+/* Spinner inside button */
+.btn-spinner {
+  width: 15px; height: 15px; display: none;
+  border: 2px solid rgba(0,0,0,0.25); border-top-color: #000;
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Result panel */
+.result-panel { display: flex; flex-direction: column; min-height: 260px; }
+.result-placeholder {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; text-align: center;
+  border: 2px dashed var(--border); border-radius: 10px; padding: 40px;
+}
+.placeholder-icon { font-size: 2.2rem; opacity: 0.35; }
+.placeholder-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.placeholder-hint { font-size: 12px; color: var(--text-dim); }
+
+.processing-overlay {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; gap: 14px; text-align: center;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 40px; flex: 1;
+}
+.processing-overlay.active { display: flex; }
+.proc-spinner {
+  width: 34px; height: 34px;
+  border: 3px solid rgba(0,255,149,0.12); border-top-color: var(--green);
+  border-radius: 50%; animation: spin 0.75s linear infinite;
+}
+.proc-text {
+  font-size: 13px; color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Result card */
+.result-card {
+  display: none; border-radius: 10px; padding: 24px;
+  border: 1px solid var(--border); flex: 1;
+  animation: fadeSlideUp 0.25s ease;
+}
+.result-card.is-spam {
+  border-color: rgba(255,59,59,0.4);
+  background: rgba(255,59,59,0.08);
+  box-shadow: inset 0 0 40px rgba(255,59,59,0.04), 0 0 20px rgba(0,0,0,0.3);
+}
+.result-card.is-legit {
+  border-color: rgba(0,255,149,0.35);
+  background: rgba(0,255,149,0.07);
+  box-shadow: inset 0 0 40px rgba(0,255,149,0.03), 0 0 20px rgba(0,0,0,0.3);
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.result-icon {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.result-icon.spam  { background: rgba(255,59,59,0.2);  box-shadow: 0 0 16px rgba(255,59,59,0.2); }
+.result-icon.legit { background: rgba(0,255,149,0.15); box-shadow: 0 0 16px rgba(0,255,149,0.15); }
+.result-verdict {
+  font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.result-verdict.spam  { color: var(--red);   text-shadow: 0 0 24px rgba(255,59,59,0.45); }
+.result-verdict.legit { color: var(--green); text-shadow: 0 0 24px rgba(0,255,149,0.45); }
+.result-sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+
+.conf-wrap { margin-bottom: 18px; }
+.conf-labels {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;
+}
+.conf-labels span:last-child { font-weight: 700; color: var(--text-primary); }
+.conf-track { height: 5px; border-radius: 50px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.conf-fill { height: 100%; border-radius: 50px; transition: width 0.9s cubic-bezier(.4,0,.2,1); }
+.conf-fill.spam  { background: linear-gradient(90deg, var(--red), #ff7070); }
+.conf-fill.legit { background: linear-gradient(90deg, var(--green), #4ade80); }
+
+.result-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+.meta-box {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px; text-align: center;
+}
+.meta-val { font-size: 1rem; font-weight: 700; }
+.meta-lbl { font-size: 10px; color: var(--text-secondary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.btn-copy {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); color: var(--text-secondary);
+  padding: 9px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-family: inherit; transition: all 0.2s;
+}
+.btn-copy:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.btn-copy.copied { border-color: var(--green); color: var(--green); background: rgba(0,255,149,0.06); }
+
+/* ===== PERFORMANCE ===== */
+#performance { background: var(--bg-0); }
+.metric-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+}
+@media (max-width: 960px) { .metric-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 560px)  { .metric-grid { grid-template-columns: repeat(2,1fr); } }
+
+.metric-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 26px 16px 22px;
+  text-align: center; position: relative; cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+/* Gradient top bar via ::before (no overflow:hidden needed) */
+.metric-card::before {
+  content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  border-radius: 12px 12px 0 0; opacity: 0.65;
+}
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(0,255,149,0.1), 0 4px 18px rgba(0,0,0,0.3);
+  border-color: rgba(0,255,149,0.18);
+}
+/* Tooltip via ::after */
+.metric-card::after {
+  content: attr(data-tooltip);
+  position: absolute; bottom: calc(100% + 10px); left: 50%;
+  transform: translateX(-50%); width: 210px;
+  background: #1C2128; border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+  text-align: center; pointer-events: none; white-space: normal;
+  opacity: 0; visibility: hidden; transition: opacity 0.2s; z-index: 200;
+}
+.metric-card:hover::after { opacity: 1; visibility: visible; }
+
+.metric-val {
+  font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em;
+  color: var(--green); line-height: 1; margin-bottom: 8px;
+}
+.metric-val-red { color: var(--red); }
+.metric-lbl { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.metric-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+/* ===== COMPARISON ===== */
+#comparison {
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.table-outer { overflow-x: auto; border-radius: 12px; }
+.comp-table {
+  width: 100%; border-collapse: collapse;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+}
+.comp-table thead { background: rgba(255,255,255,0.025); border-bottom: 1px solid var(--border); }
+.comp-table th {
+  padding: 16px 20px; text-align: center;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border-right: 1px solid var(--border);
+}
+.comp-table th:last-child { border-right: none; }
+.comp-table th.col-win {
+  background: rgba(0,255,149,0.05); color: var(--green);
+  border-left: 1px solid rgba(0,255,149,0.15);
+  border-right: 1px solid rgba(0,255,149,0.15);
+}
+.comp-table td {
+  padding: 13px 20px; text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-right: 1px solid var(--border);
+  color: var(--text-primary);
+}
+.comp-table td:first-child {
+  text-align: left; color: var(--text-secondary);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.comp-table td:last-child { border-right: none; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table td.col-win {
+  background: rgba(0,255,149,0.04); color: var(--green); font-weight: 700;
+  border-left: 1px solid rgba(0,255,149,0.1);
+  border-right: 1px solid rgba(0,255,149,0.1);
+}
+.comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+.comp-table tr:hover td.col-win { background: rgba(0,255,149,0.07); }
+.win-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; background: rgba(0,255,149,0.1); color: var(--green);
+  border: 1px solid rgba(0,255,149,0.22); border-radius: 50px;
+  padding: 2px 8px; font-weight: 700; letter-spacing: 0.06em;
+  margin-left: 6px; vertical-align: middle; font-family: 'Inter', sans-serif;
+}
+.comp-note {
+  margin-top: 20px; padding: 14px 20px;
+  background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.14);
+  border-radius: 10px; font-size: 13px; color: var(--text-secondary);
+  text-align: center; font-family: 'Inter', sans-serif;
+}
+.comp-note strong { color: var(--blue); }
+
+/* ===== WHY RANDOM FOREST ===== */
+#why-rf {
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.why-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 860px) { .why-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 480px) { .why-grid { grid-template-columns: 1fr; } }
+
+.why-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 18px;
+  display: flex; flex-direction: column; gap: 0;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.why-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0,255,149,0.1), 0 4px 18px rgba(0,0,0,0.3);
+  border-color: rgba(0,255,149,0.2);
+}
+.why-card-icon {
+  width: 44px; height: 44px; border-radius: 11px; margin-bottom: 14px;
+  background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.15);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.why-card-title {
+  font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary);
+}
+.why-compare { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; flex: 1; }
+.why-model-row { display: flex; flex-direction: column; gap: 3px; }
+.why-model-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+}
+.why-model-tag.rf   { color: var(--green); }
+.why-model-tag.lstm { color: var(--text-dim); }
+.why-model-vals { display: flex; flex-direction: column; gap: 1px; padding-left: 2px; }
+.why-model-vals span {
+  font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+}
+.why-model-vals span.rf-val   { color: var(--green); }
+.why-model-vals span.lstm-val { color: var(--text-secondary); }
+.why-sep {
+  height: 1px; background: var(--border); margin: 2px 0;
+}
+.why-accuracy-box {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px; text-align: center;
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; flex: 1;
+}
+.why-accuracy-box strong { color: var(--text-primary); }
+.why-winner-badge {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(0,255,149,0.08); border: 1px solid rgba(0,255,149,0.22);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; font-weight: 700; color: var(--green);
+}
+.why-footnote {
+  font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 6px; font-style: italic;
+}
+.why-conclusion {
+  background: rgba(0,255,149,0.05); border: 1px solid rgba(0,255,149,0.2);
+  border-radius: 12px; padding: 26px 32px; text-align: center; position: relative;
+}
+.why-conclusion::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0,255,149,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.why-conclusion-text {
+  position: relative; font-size: 1rem; color: var(--text-primary);
+  line-height: 1.75; max-width: 720px; margin: 0 auto;
+}
+.why-conclusion-text strong { color: var(--green); }
+
+/* ===== HOW IT WORKS ===== */
+#how-it-works { background: var(--bg-0); }
+.steps-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+}
+@media (max-width: 860px) { .steps-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
+
+.step-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 32px 20px 24px; text-align: center;
+  position: relative; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.step-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(59,130,246,0.1), 0 4px 18px rgba(0,0,0,0.3);
+  border-color: rgba(59,130,246,0.2);
+}
+.step-num {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  width: 28px; height: 28px; border-radius: 50%; background: var(--blue);
+  color: #fff; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 14px rgba(59,130,246,0.45);
+}
+.step-card:last-child .step-num { background: var(--green); color: #000; box-shadow: 0 0 14px rgba(0,255,149,0.4); }
+.step-icon {
+  width: 60px; height: 60px; margin: 0 auto 16px;
+  border-radius: 14px; border: 1px solid rgba(59,130,246,0.2);
+  background: rgba(59,130,246,0.06);
+  display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+.step-card:last-child .step-icon {
+  border-color: rgba(0,255,149,0.2); background: rgba(0,255,149,0.06);
+}
+.step-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.step-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.65; }
+
+/* ===== FOOTER ===== */
+footer {
+  background: var(--bg-1); border-top: 1px solid var(--border);
+  padding: 52px 0 32px; text-align: center;
+}
+.footer-logo {
+  font-size: 16px; font-weight: 700; margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.footer-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.footer-team { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
+.footer-links {
+  display: flex; justify-content: center; gap: 20px;
+  flex-wrap: wrap; margin-bottom: 28px;
+}
+.footer-links a {
+  font-size: 13px; color: var(--text-secondary);
+  transition: color 0.2s; text-decoration: none;
+}
+.footer-links a:hover { color: var(--text-primary); text-decoration: none; }
+.footer-divider { height: 1px; background: var(--border); max-width: 420px; margin: 0 auto 20px; }
+.footer-copy { font-size: 12px; color: var(--text-dim); }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ===== NAV ===== -->
 <nav>
   <div class="container">
-    <div class="nav-logo">
-      <div class="nav-logo-icon">🛡️</div>
-      <div>
-        <div class="nav-logo-text">SpamShield AI</div>
-        <div class="nav-logo-sub">University of Ha'il</div>
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">
+        <div class="nav-logo-icon">🛡️</div>
+        <span class="nav-logo-name">SpamShield AI</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#analyzer"    data-section="analyzer">Analyzer</a></li>
+        <li><a href="#performance" data-section="performance">Performance</a></li>
+        <li><a href="#comparison"  data-section="comparison">Comparison</a></li>
+        <li><a href="#why-rf"      data-section="why-rf">Why RF?</a></li>
+        <li><a href="#how-it-works" data-section="how-it-works">How It Works</a></li>
+      </ul>
+      <div class="nav-right">
+        <a href="https://github.com/" target="_blank" rel="noopener" class="nav-github">⭐ GitHub</a>
+        <a href="#analyzer" class="btn-nav-cta">Analyze Now</a>
       </div>
     </div>
-    <ul class="nav-links">
-      <li><a href="#analyzer">Analyzer</a></li>
-      <li><a href="#performance">Performance</a></li>
-      <li><a href="#comparison">Comparison</a></li>
-      <li><a href="#how-it-works">How It Works</a></li>
-    </ul>
   </div>
 </nav>
 
-<!-- ===== SECTION 1: HERO ===== -->
+<!-- ===== HERO ===== -->
 <section id="hero">
-  <div class="hero-bg">
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-  </div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow hero-glow-blue"></div>
+  <div class="hero-glow hero-glow-green"></div>
   <div class="container hero-content">
     <div class="hero-eyebrow">
-      <span class="badge">🎓 University of Ha'il &nbsp;·&nbsp; College of Computer Science &amp; Engineering</span>
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        Trained on 193,850 emails
+      </div>
     </div>
-    <h1 class="hero-title">
-      Efficient Filtering of Email Messages<br>
-      for Real-Time Spam Identification
-    </h1>
+    <h1 class="hero-title">Real-Time Email<br>Spam Detection</h1>
     <p class="hero-sub">
-      A production-ready spam detection system powered by TF-IDF feature extraction
-      and Random Forest classification — trained on 193,850 real-world emails.
+      Production-ready spam filtering powered by TF-IDF + Random Forest — 98.04% accuracy
     </p>
-    <div class="hero-counter">
-      <span class="pulse-dot"></span>
-      <strong id="heroCounter">0</strong>&nbsp;emails analyzed in training
-    </div>
     <div class="hero-cta">
-      <a href="#analyzer" class="btn-primary">
-        ⚡ Try the Analyzer
-      </a>
-      <a href="#performance" class="btn-secondary">
-        📊 View Performance
-      </a>
+      <a href="#analyzer" class="btn-primary">⚡ Try Analyzer</a>
+      <a href="#performance" class="btn-outline">📊 View Performance</a>
     </div>
   </div>
 </section>
 
-<!-- ===== SECTION 2: ANALYZER ===== -->
+<!-- ===== ANALYZER ===== -->
 <section id="analyzer">
   <div class="container">
     <div class="section-header">
-      <span class="badge">Live Demo</span>
-      <h2 class="section-title" style="margin-top:14px;">Email Spam Analyzer</h2>
+      <div class="section-tag"><span class="badge badge-green">⚡ Live Demo</span></div>
+      <h2 class="section-title">Email Spam Analyzer</h2>
       <p class="section-sub">Paste any email and get an instant AI-powered verdict with confidence score.</p>
     </div>
-    <div class="analyzer-grid">
-      <!-- Input -->
-      <div class="input-panel">
-        <label for="emailInput">Email Content</label>
-        <div class="textarea-wrap">
-          <textarea id="emailInput" placeholder="Paste your email content here...&#10;&#10;Subject, headers, body — any format works."></textarea>
-          <span class="char-counter" id="charCounter">0 chars</span>
-        </div>
-        <div class="input-actions">
-          <button class="btn-analyze" id="analyzeBtn" onclick="analyzeEmail()">
-            <div class="spinner" id="btnSpinner"></div>
-            <span id="btnText">⚡ Analyze Email</span>
-          </button>
-          <button class="btn-clear" onclick="clearInput()">✕ Clear</button>
-        </div>
-        <div class="example-btns">
-          <button class="btn-example spam-ex" onclick="fillSpam()">🔴 Try Spam Example</button>
-          <button class="btn-example legit-ex" onclick="fillLegit()">🟢 Try Legitimate Example</button>
-        </div>
-      </div>
+    <div class="analyzer-card">
+      <div class="analyzer-layout">
 
-      <!-- Result -->
-      <div class="result-panel">
-        <div class="result-placeholder" id="resultPlaceholder">
-          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <div>
-            <strong style="color:var(--muted)">Awaiting Analysis</strong>
-            <p style="font-size:13px;color:var(--navy3);margin-top:4px;">
-              Enter an email and click "Analyze Email"
-            </p>
+        <!-- Input -->
+        <div>
+          <label class="field-label" for="emailInput">Email Content</label>
+          <div class="textarea-wrap">
+            <textarea id="emailInput" placeholder="Paste any email text to analyze…"></textarea>
+            <span class="char-counter" id="charCounter">0 chars</span>
+          </div>
+          <div class="input-actions">
+            <button class="btn-analyze" id="analyzeBtn" onclick="analyzeEmail()">
+              <div class="btn-spinner" id="btnSpinner"></div>
+              <span id="btnText">Analyze Email</span>
+            </button>
+            <button class="btn-clear" onclick="clearInput()">Clear</button>
+          </div>
+          <div class="example-btns">
+            <button class="btn-example btn-spam-ex" onclick="fillSpam()">🔴 Try Spam Example</button>
+            <button class="btn-example btn-legit-ex" onclick="fillLegit()">🟢 Try Legit Example</button>
           </div>
         </div>
 
-        <div class="result-card" id="resultCard">
-          <div class="result-header">
-            <div class="result-icon" id="resultIcon">❓</div>
-            <div>
-              <div class="result-verdict" id="resultVerdict">—</div>
-              <div class="result-desc" id="resultDesc">—</div>
-            </div>
+        <!-- Result -->
+        <div class="result-panel">
+          <div class="result-placeholder" id="resultPlaceholder">
+            <div class="placeholder-icon">🔍</div>
+            <div class="placeholder-title">Awaiting Analysis</div>
+            <div class="placeholder-hint">Enter an email and click "Analyze Email"<br>or press Ctrl + Enter</div>
           </div>
 
-          <div class="confidence-bar-wrap">
-            <div class="confidence-label">
-              <span>Confidence Score</span>
-              <span id="confLabel">—%</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill" id="confBar" style="width:0%"></div>
-            </div>
+          <div class="processing-overlay" id="processingOverlay">
+            <div class="proc-spinner"></div>
+            <div class="proc-text">Processing…</div>
           </div>
 
-          <div class="result-meta">
-            <div class="meta-item">
-              <div class="meta-value" id="metaConf">—</div>
-              <div class="meta-label">Confidence</div>
+          <div class="result-card" id="resultCard">
+            <div class="result-header">
+              <div class="result-icon" id="resultIcon"></div>
+              <div>
+                <div class="result-verdict" id="resultVerdict"></div>
+                <div class="result-sub" id="resultSub"></div>
+              </div>
             </div>
-            <div class="meta-item">
-              <div class="meta-value" id="metaWords">—</div>
-              <div class="meta-label">Words</div>
+            <div class="conf-wrap">
+              <div class="conf-labels">
+                <span>Confidence Score</span>
+                <span id="confLabel"></span>
+              </div>
+              <div class="conf-track">
+                <div class="conf-fill" id="confFill" style="width:0%"></div>
+              </div>
             </div>
-            <div class="meta-item">
-              <div class="meta-value" id="metaTime">—</div>
-              <div class="meta-label">Process Time</div>
+            <div class="result-meta">
+              <div class="meta-box">
+                <div class="meta-val" id="metaConf"></div>
+                <div class="meta-lbl">Confidence</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-val" id="metaWords"></div>
+                <div class="meta-lbl">Words</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-val" id="metaTime"></div>
+                <div class="meta-lbl">Process Time</div>
+              </div>
             </div>
+            <button class="btn-copy" id="copyBtn" onclick="copyResult()">📋 Copy Result</button>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== SECTION 3: PERFORMANCE ===== -->
-<section id="performance" style="background: linear-gradient(180deg, transparent, rgba(59,130,246,0.04), transparent);">
+<!-- ===== PERFORMANCE ===== -->
+<section id="performance">
   <div class="container">
     <div class="section-header">
-      <span class="badge">Model Performance</span>
-      <h2 class="section-title" style="margin-top:14px;">Production-Grade Results</h2>
+      <div class="section-tag"><span class="badge">📊 Model Performance</span></div>
+      <h2 class="section-title">Production-Grade Results</h2>
       <p class="section-sub">Validated on 193,850 real-world emails across multiple evaluation metrics.</p>
     </div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value"><span class="count-up" data-target="96.31" data-dec="2">0</span>%</div>
-        <div class="stat-label">Accuracy</div>
-        <div class="stat-sub">TF-IDF + Random Forest</div>
+    <div class="metric-grid">
+      <div class="metric-card" data-tooltip="Percentage of all emails correctly classified as spam or legitimate.">
+        <div class="metric-val"><span class="count-up" data-target="98.04" data-dec="2">0</span>%</div>
+        <div class="metric-lbl">Accuracy</div>
+        <div class="metric-sub">Overall correctness</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value"><span class="count-up" data-target="6.06" data-dec="2">0</span>%</div>
-        <div class="stat-label">False Positive Rate</div>
-        <div class="stat-sub">Legitimate emails misflagged</div>
+      <div class="metric-card" data-tooltip="Of all emails flagged as spam, the percentage that actually were spam. High precision = fewer false alarms.">
+        <div class="metric-val"><span class="count-up" data-target="97.82" data-dec="2">0</span>%</div>
+        <div class="metric-lbl">Precision</div>
+        <div class="metric-sub">Spam flagged correctly</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value"><span class="count-up" data-target="193850" data-dec="0">0</span></div>
-        <div class="stat-label">Dataset Size</div>
-        <div class="stat-sub">Real-world email samples</div>
+      <div class="metric-card" data-tooltip="True Positive Rate (Recall) — percentage of actual spam emails correctly detected by the model.">
+        <div class="metric-val"><span class="count-up" data-target="98.05" data-dec="2">0</span>%</div>
+        <div class="metric-lbl">TPR / Recall</div>
+        <div class="metric-sub">Spam detected</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value"><span class="count-up" data-target="378" data-dec="0">0</span>s</div>
-        <div class="stat-label">Training Time</div>
-        <div class="stat-sub">On standard hardware</div>
+      <div class="metric-card" data-tooltip="False Positive Rate — percentage of legitimate emails incorrectly flagged as spam. Lower is better.">
+        <div class="metric-val metric-val-red"><span class="count-up" data-target="1.96" data-dec="2">0</span>%</div>
+        <div class="metric-lbl">FPR</div>
+        <div class="metric-sub">False alarm rate</div>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== SECTION 4: WHY ===== -->
-<section id="why">
-  <div class="container">
-    <div class="section-header">
-      <span class="badge">Architecture</span>
-      <h2 class="section-title" style="margin-top:14px;">Why TF-IDF + Random Forest?</h2>
-      <p class="section-sub">The optimal balance between accuracy, speed, and resource efficiency for real-world deployment.</p>
-    </div>
-    <div class="why-grid">
-      <div class="why-card">
-        <div class="why-icon">⚡</div>
-        <div class="why-title">Real-Time Speed</div>
-        <div class="why-desc">
-          Instant classification with sub-millisecond inference. Processes emails as fast as they arrive
-          without queuing or batching overhead.
-        </div>
-        <div class="why-stat">TF-IDF + RF: &lt;1ms &nbsp;vs&nbsp; LSTM: ~50ms per email</div>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">🖥️</div>
-        <div class="why-title">Lower Resource Usage</div>
-        <div class="why-desc">
-          Runs efficiently on commodity hardware. No specialized GPU infrastructure required,
-          dramatically reducing operational costs.
-        </div>
-        <div class="why-stat">4 GB RAM &nbsp;vs&nbsp; 8 GB for Deep Learning</div>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">🎯</div>
-        <div class="why-title">High Accuracy</div>
-        <div class="why-desc">
-          Achieves 96.31% classification accuracy on a diverse dataset of 193,850 emails —
-          competitive with much heavier deep learning models.
-        </div>
-        <div class="why-stat">96.31% on 193,850 emails · FPR 6.06%</div>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">🔧</div>
-        <div class="why-title">No GPU Required</div>
-        <div class="why-desc">
-          Entire training and inference pipeline runs on standard CPU hardware.
-          Deployable anywhere — edge servers, cloud VMs, or on-premises.
-        </div>
-        <div class="why-stat">Standard CPU · scikit-learn · No CUDA</div>
+      <div class="metric-card" data-tooltip="Harmonic mean of Precision and Recall — the balanced measure of spam detection quality.">
+        <div class="metric-val"><span class="count-up" data-target="97.94" data-dec="2">0</span>%</div>
+        <div class="metric-lbl">F1-Score</div>
+        <div class="metric-sub">Balanced accuracy</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== SECTION 5: COMPARISON TABLE ===== -->
-<section id="comparison" style="background: linear-gradient(180deg, transparent, rgba(59,130,246,0.03), transparent);">
+<!-- ===== COMPARISON ===== -->
+<section id="comparison">
   <div class="container">
     <div class="section-header">
-      <span class="badge">Model Comparison</span>
-      <h2 class="section-title" style="margin-top:14px;">Algorithm Evaluation</h2>
+      <div class="section-tag"><span class="badge">⚖️ Model Comparison</span></div>
+      <h2 class="section-title">Algorithm Evaluation</h2>
       <p class="section-sub">Three approaches benchmarked on identical datasets under controlled conditions.</p>
     </div>
-    <div class="table-wrap">
-      <table>
+    <div class="table-outer">
+      <table class="comp-table">
         <thead>
           <tr>
             <th style="text-align:left;">Metric</th>
-            <th>Bag-of-Words + RF</th>
-            <th class="highlight-col">TF-IDF + RF <span class="check-badge">OUR CHOICE ✓</span></th>
-            <th>LSTM Deep Learning</th>
+            <th>BoW + RF</th>
+            <th class="col-win">TF-IDF + RF <span class="win-badge">✓ DEPLOYED</span></th>
+            <th>LSTM + NLP</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Accuracy</td>
+            <td>Accuracy</td>
             <td>96.23%</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">96.31%</td>
+            <td class="col-win">98.04%</td>
             <td>98.47%</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">False Positive Rate</td>
+            <td>Precision</td>
+            <td>93.49%</td>
+            <td class="col-win">97.82%</td>
+            <td>98.48%</td>
+          </tr>
+          <tr>
+            <td>TPR (Recall)</td>
+            <td>98.90%</td>
+            <td class="col-win">98.05%</td>
+            <td>98.29%</td>
+          </tr>
+          <tr>
+            <td>FPR</td>
             <td>6.18%</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">6.06%</td>
+            <td class="col-win">1.96%</td>
             <td>1.37%</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Training Time</td>
-            <td>376 seconds</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">378 seconds</td>
-            <td>~115.5 minutes</td>
+            <td>F1-Score</td>
+            <td>96.12%</td>
+            <td class="col-win">97.94%</td>
+            <td>98.38%</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Inference Speed</td>
-            <td>&lt;1 ms</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">&lt;1 ms</td>
-            <td>~50 ms</td>
+            <td>Training Time</td>
+            <td>~6 min</td>
+            <td class="col-win">~19 min</td>
+            <td>~110 min</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Memory (RAM)</td>
+            <td>Inference Speed</td>
+            <td>&lt;1ms</td>
+            <td class="col-win">&lt;1ms</td>
+            <td>~50ms</td>
+          </tr>
+          <tr>
+            <td>Memory (RAM)</td>
             <td>~4 GB</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">~4 GB</td>
+            <td class="col-win">~4 GB</td>
             <td>~8 GB</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">GPU Required</td>
+            <td>GPU Required</td>
             <td>No</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">No</td>
-            <td>Yes (recommended)</td>
+            <td class="col-win">No</td>
+            <td>Yes</td>
           </tr>
           <tr>
-            <td style="text-align:left; font-weight:600; color:var(--muted); font-size:13px;">Deployability</td>
+            <td>Deployability</td>
             <td>Any server</td>
-            <td class="highlight-col" style="color:var(--blue2); font-weight:700;">Any server</td>
+            <td class="col-win">Any server</td>
             <td>GPU server</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="table-note">
-      <strong>⚠️ Note on LSTM:</strong>
-      LSTM achieves 2.16% higher accuracy but requires <strong>18× longer training</strong> and <strong>2× more memory</strong> —
+    <div class="comp-note">
+      <strong>Note:</strong> LSTM achieves <strong>0.43% higher accuracy</strong> but requires <strong>6× longer training</strong> and <strong>2× more memory</strong> —
       making TF-IDF + Random Forest the pragmatic production choice.
     </div>
   </div>
 </section>
 
-<!-- ===== SECTION 6: HOW IT WORKS ===== -->
+<!-- ===== WHY RANDOM FOREST ===== -->
+<section id="why-rf">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><span class="badge badge-green">🌲 Design Decision</span></div>
+      <h2 class="section-title">Why Random Forest over Deep Learning?</h2>
+      <p class="section-sub">A quantitative comparison showing why TF-IDF + RF outperforms LSTM for real-world production deployment.</p>
+    </div>
+    <div class="why-grid">
+
+      <!-- Card 1: Speed -->
+      <div class="why-card">
+        <div class="why-card-icon">⚡</div>
+        <div class="why-card-title">Speed</div>
+        <div class="why-compare">
+          <div class="why-model-row">
+            <span class="why-model-tag rf">Random Forest</span>
+            <div class="why-model-vals">
+              <span class="rf-val">~19 min training</span>
+              <span class="rf-val">&lt;1ms inference</span>
+            </div>
+          </div>
+          <div class="why-sep"></div>
+          <div class="why-model-row">
+            <span class="why-model-tag lstm">LSTM</span>
+            <div class="why-model-vals">
+              <span class="lstm-val">~110 min training</span>
+              <span class="lstm-val">~50ms inference</span>
+            </div>
+          </div>
+        </div>
+        <div class="why-winner-badge">🏆 Winner: Random Forest ✅</div>
+        <div class="why-footnote">6× faster training · 50× faster inference</div>
+      </div>
+
+      <!-- Card 2: Accuracy -->
+      <div class="why-card">
+        <div class="why-card-icon">🎯</div>
+        <div class="why-card-title">Accuracy</div>
+        <div class="why-compare">
+          <div class="why-model-row">
+            <span class="why-model-tag rf">Random Forest</span>
+            <div class="why-model-vals">
+              <span class="rf-val">98.04%</span>
+            </div>
+          </div>
+          <div class="why-sep"></div>
+          <div class="why-model-row">
+            <span class="why-model-tag lstm">LSTM</span>
+            <div class="why-model-vals">
+              <span class="lstm-val">98.47%</span>
+            </div>
+          </div>
+        </div>
+        <div class="why-accuracy-box">
+          Difference: only <strong>+0.43%</strong>
+        </div>
+        <div class="why-footnote">Marginal gain, massive cost</div>
+      </div>
+
+      <!-- Card 3: Resources -->
+      <div class="why-card">
+        <div class="why-card-icon">🖥️</div>
+        <div class="why-card-title">Resources</div>
+        <div class="why-compare">
+          <div class="why-model-row">
+            <span class="why-model-tag rf">Random Forest</span>
+            <div class="why-model-vals">
+              <span class="rf-val">~4 GB RAM</span>
+              <span class="rf-val">No GPU needed</span>
+            </div>
+          </div>
+          <div class="why-sep"></div>
+          <div class="why-model-row">
+            <span class="why-model-tag lstm">LSTM</span>
+            <div class="why-model-vals">
+              <span class="lstm-val">~8 GB RAM</span>
+              <span class="lstm-val">GPU recommended</span>
+            </div>
+          </div>
+        </div>
+        <div class="why-winner-badge">🏆 Winner: Random Forest ✅</div>
+        <div class="why-footnote">2× less memory · No GPU needed</div>
+      </div>
+
+      <!-- Card 4: Deployment -->
+      <div class="why-card">
+        <div class="why-card-icon">🚀</div>
+        <div class="why-card-title">Deployment</div>
+        <div class="why-compare">
+          <div class="why-model-row">
+            <span class="why-model-tag rf">Random Forest</span>
+            <div class="why-model-vals">
+              <span class="rf-val">Any server</span>
+              <span class="rf-val">Instant setup</span>
+            </div>
+          </div>
+          <div class="why-sep"></div>
+          <div class="why-model-row">
+            <span class="why-model-tag lstm">LSTM</span>
+            <div class="why-model-vals">
+              <span class="lstm-val">GPU server required</span>
+              <span class="lstm-val">Complex infra</span>
+            </div>
+          </div>
+        </div>
+        <div class="why-winner-badge">🏆 Winner: Random Forest ✅</div>
+        <div class="why-footnote">Deploy anywhere, zero infra cost</div>
+      </div>
+
+    </div>
+
+    <!-- Conclusion banner -->
+    <div class="why-conclusion">
+      <p class="why-conclusion-text">
+        For <strong>193,850 emails</strong>, Random Forest delivers <strong>98.04% accuracy</strong> with
+        <strong>6× faster training</strong> and <strong>half the memory</strong> —
+        the optimal choice for production deployment.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
 <section id="how-it-works">
   <div class="container">
     <div class="section-header">
-      <span class="badge">Pipeline</span>
-      <h2 class="section-title" style="margin-top:14px;">How It Works</h2>
+      <div class="section-tag"><span class="badge">🔧 Pipeline</span></div>
+      <h2 class="section-title">How It Works</h2>
       <p class="section-sub">Four deterministic steps from raw email to classification decision.</p>
     </div>
-    <div class="pipeline">
-      <div class="pipeline-step">
-        <div class="step-number">1</div>
-        <div class="step-icon">📧</div>
-        <div class="step-title">Email Input</div>
-        <div class="step-desc">Raw email text is received — subject, headers, and body in any format.</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">📥</div>
+        <div class="step-title">Preprocessing</div>
+        <div class="step-desc">URL removal, email stripping, phone number cleaning, special character removal and whitespace normalization.</div>
       </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="step-number">2</div>
-        <div class="step-icon">🧹</div>
-        <div class="step-title">Text Preprocessing</div>
-        <div class="step-desc">Lowercasing, URL/email removal, special character stripping, whitespace normalization.</div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">🔢</div>
+        <div class="step-title">TF-IDF Vectorization</div>
+        <div class="step-desc">Convert text to 5,000 feature vectors using term frequency–inverse document frequency with 1–2 n-grams.</div>
       </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="step-number">3</div>
-        <div class="step-icon">📐</div>
-        <div class="step-title">TF-IDF Extraction</div>
-        <div class="step-desc">5,000-feature TF-IDF vector with 1–2 n-grams captures word importance across the corpus.</div>
-      </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="step-number">4</div>
+      <div class="step-card">
+        <div class="step-num">3</div>
         <div class="step-icon">🌲</div>
-        <div class="step-title">Random Forest</div>
-        <div class="step-desc">Ensemble of decision trees votes on the TF-IDF vector to produce a confident prediction.</div>
+        <div class="step-title">Random Forest Classification</div>
+        <div class="step-desc">An ensemble of 100 decision trees votes on the TF-IDF vector to produce a confident prediction.</div>
       </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step result-step">
-        <div class="step-number">✓</div>
-        <div class="step-icon">🏷️</div>
-        <div class="step-title">Classification</div>
-        <div class="step-desc">Spam or Legitimate verdict with probability confidence score, sub-millisecond latency.</div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-icon">✅</div>
+        <div class="step-title">Final Decision</div>
+        <div class="step-desc">Spam or Legitimate verdict returned with confidence score in sub-millisecond latency.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== SECTION 7: FOOTER ===== -->
+<!-- ===== FOOTER ===== -->
 <footer>
   <div class="container">
     <div class="footer-logo">🎓 University of Ha'il</div>
-    <div class="footer-sub">
-      College of Computer Science and Engineering · Department of Information Security · 2025–2026
+    <div class="footer-sub">Information Security Department · Graduation Project 2025–2026</div>
+    <div class="footer-team">
+      Team: Majed · Talal · Mazen · Yazeed · Dhari<br>
+      Supervisor: Prof. Dr. Shahid Alam
     </div>
     <div class="footer-links">
       <a href="https://github.com/" target="_blank" rel="noopener">⭐ GitHub Repository</a>
       <a href="#hero">↑ Back to Top</a>
-      <a href="#analyzer">⚡ Analyzer</a>
+      <a href="#analyzer">⚡ Try Analyzer</a>
     </div>
     <div class="footer-divider"></div>
     <div class="footer-copy">
-      "Efficient Filtering of Email Messages for Real-Time Spam Identification" ·
-      TF-IDF + Random Forest · scikit-learn · Flask
+      SpamShield AI · TF-IDF + Random Forest · scikit-learn · Flask · 98.04% Accuracy
     </div>
   </div>
 </footer>
 
 <!-- ===== JAVASCRIPT ===== -->
 <script>
-  /* ---- Hero counter animation ---- */
-  (function () {
-    const el = document.getElementById('heroCounter');
-    const target = 193850;
-    const duration = 2200;
-    const start = performance.now();
-    function step(now) {
-      const t = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 4);
-      el.textContent = Math.round(ease * target).toLocaleString();
-      if (t < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  })();
+  /* ---- Active nav link on scroll ---- */
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a[data-section]');
 
-  /* ---- Scroll-triggered count-up for stats ---- */
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-links a[data-section="${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.35 });
+  sections.forEach(s => sectionObserver.observe(s));
+
+  /* ---- Scroll-triggered count-up ---- */
   const countEls = document.querySelectorAll('.count-up');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !entry.target.dataset.done) {
-        entry.target.dataset.done = '1';
-        animateCount(entry.target);
+  const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !e.target.dataset.done) {
+        e.target.dataset.done = '1';
+        animateCount(e.target);
       }
     });
   }, { threshold: 0.5 });
-  countEls.forEach(el => observer.observe(el));
+  countEls.forEach(el => countObserver.observe(el));
 
   function animateCount(el) {
     const target = parseFloat(el.dataset.target);
-    const dec = parseInt(el.dataset.dec) || 0;
-    const duration = 1800;
-    const start = performance.now();
-    function step(now) {
-      const t = Math.min((now - start) / duration, 1);
+    const dec    = parseInt(el.dataset.dec) || 0;
+    const dur    = 1600;
+    const start  = performance.now();
+    (function step(now) {
+      const t = Math.min((now - start) / dur, 1);
       const ease = 1 - Math.pow(1 - t, 3);
-      const val = ease * target;
       el.textContent = dec > 0
-        ? val.toFixed(dec)
-        : Math.round(val).toLocaleString();
+        ? (ease * target).toFixed(dec)
+        : Math.round(ease * target).toLocaleString();
       if (t < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    })(start);
   }
 
   /* ---- Character counter ---- */
-  const emailInput = document.getElementById('emailInput');
+  const emailInput  = document.getElementById('emailInput');
   const charCounter = document.getElementById('charCounter');
   emailInput.addEventListener('input', () => {
-    const len = emailInput.value.length;
-    charCounter.textContent = len.toLocaleString() + ' chars';
-    charCounter.style.color = len > 5000 ? '#ef4444' : 'var(--navy3)';
+    const n = emailInput.value.length;
+    charCounter.textContent = n.toLocaleString() + ' chars';
+    charCounter.style.color = n > 5000 ? 'var(--red)' : 'var(--text-dim)';
   });
 
-  /* ---- Example content ---- */
+  /* ---- Sample emails ---- */
   const SPAM_EXAMPLE = `Subject: CONGRATULATIONS! You've won a $1,000 Amazon Gift Card!
 
 Dear Winner,
@@ -873,6 +1146,7 @@ Click HERE to claim your FREE $1,000 prize NOW before it expires!!!
 https://claim-prize-free.xyz/winner?id=8472637
 
 Hurry! This offer EXPIRES in 24 HOURS. You must act NOW!
+Call us to confirm: +1-800-555-0199
 
 To unsubscribe from future offers, click here.
 
@@ -892,16 +1166,15 @@ Agenda items:
 3. Product roadmap priorities (25 min)
 4. Action items and assignments (10 min)
 
-Please review the attached spreadsheet before the meeting. If you have any items to add to the agenda, reply to this email by end of day today.
+Please review the attached spreadsheet before the meeting. If you have any items to add, reply by end of day today.
 
 Looking forward to a productive session.
 
 Best regards,
 Sarah Mitchell
-Project Manager | Engineering Division
-sarah.mitchell@company.com | ext. 4821`;
+Project Manager | Engineering Division`;
 
-  function fillSpam() {
+  function fillSpam()  {
     emailInput.value = SPAM_EXAMPLE;
     emailInput.dispatchEvent(new Event('input'));
     emailInput.focus();
@@ -915,26 +1188,37 @@ sarah.mitchell@company.com | ext. 4821`;
     emailInput.value = '';
     emailInput.dispatchEvent(new Event('input'));
     document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('processingOverlay').classList.remove('active');
     document.getElementById('resultPlaceholder').style.display = 'flex';
     emailInput.focus();
   }
 
   /* ---- Analyze ---- */
+  let lastResult = null;
+
   async function analyzeEmail() {
     const text = emailInput.value.trim();
     if (!text) {
       emailInput.focus();
       emailInput.style.borderColor = 'var(--red)';
-      setTimeout(() => emailInput.style.borderColor = '', 1000);
+      setTimeout(() => { emailInput.style.borderColor = ''; }, 1200);
       return;
     }
 
-    const btn = document.getElementById('analyzeBtn');
+    const btn     = document.getElementById('analyzeBtn');
     const spinner = document.getElementById('btnSpinner');
     const btnText = document.getElementById('btnText');
+
     btn.disabled = true;
     spinner.style.display = 'block';
-    btnText.textContent = 'Analyzing...';
+    btnText.textContent = 'Analyzing…';
+
+    // Show processing overlay
+    document.getElementById('resultPlaceholder').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('processingOverlay').classList.add('active');
+
+    const fetchStart = performance.now();
 
     try {
       const res = await fetch('/predict', {
@@ -942,54 +1226,88 @@ sarah.mitchell@company.com | ext. 4821`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: text })
       });
-
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Server error');
       }
-
       const data = await res.json();
+      lastResult = data;
+
+      // Guarantee minimum 150 ms visible processing state
+      const elapsed = performance.now() - fetchStart;
+      if (elapsed < 150) await new Promise(r => setTimeout(r, 150 - elapsed));
+
       showResult(data);
     } catch (e) {
+      document.getElementById('processingOverlay').classList.remove('active');
+      document.getElementById('resultPlaceholder').style.display = 'flex';
       alert('Error: ' + e.message);
     } finally {
       btn.disabled = false;
       spinner.style.display = 'none';
-      btnText.textContent = '⚡ Analyze Email';
+      btnText.textContent = 'Analyze Email';
     }
   }
 
   function showResult(data) {
     const isSpam = data.result === 'spam';
+
+    document.getElementById('processingOverlay').classList.remove('active');
+
     const card = document.getElementById('resultCard');
-    const placeholder = document.getElementById('resultPlaceholder');
-
-    placeholder.style.display = 'none';
+    card.className = 'result-card ' + (isSpam ? 'is-spam' : 'is-legit');
     card.style.display = 'block';
-    card.className = 'result-card ' + (isSpam ? 'spam-result' : 'legit-result');
 
-    document.getElementById('resultIcon').textContent   = isSpam ? '🚨' : '✅';
-    document.getElementById('resultIcon').className     = 'result-icon ' + (isSpam ? 'spam' : 'legit');
+    document.getElementById('resultIcon').textContent = isSpam ? '🛑' : '✅';
+    document.getElementById('resultIcon').className   = 'result-icon ' + (isSpam ? 'spam' : 'legit');
+
     document.getElementById('resultVerdict').textContent = isSpam ? 'SPAM DETECTED' : 'LEGITIMATE EMAIL';
     document.getElementById('resultVerdict').className   = 'result-verdict ' + (isSpam ? 'spam' : 'legit');
-    document.getElementById('resultDesc').textContent    = isSpam
+
+    document.getElementById('resultSub').textContent = isSpam
       ? 'This email shows characteristics typical of spam.'
       : 'This email appears to be legitimate.';
 
     const conf = data.confidence.toFixed(2);
     document.getElementById('confLabel').textContent = conf + '%';
-    const bar = document.getElementById('confBar');
-    bar.className = 'bar-fill ' + (isSpam ? 'spam' : 'legit');
-    setTimeout(() => { bar.style.width = conf + '%'; }, 50);
+    const fill = document.getElementById('confFill');
+    fill.className = 'conf-fill ' + (isSpam ? 'spam' : 'legit');
+    fill.style.width = '0%';
+    setTimeout(() => { fill.style.width = conf + '%'; }, 30);
 
     document.getElementById('metaConf').textContent  = conf + '%';
     document.getElementById('metaWords').textContent = data.word_count.toLocaleString();
     document.getElementById('metaTime').textContent  = data.processing_time_ms + 'ms';
 
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.textContent = '📋 Copy Result';
+    copyBtn.classList.remove('copied');
+
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  /* ---- Enter key shortcut ---- */
+  function copyResult() {
+    if (!lastResult) return;
+    const text = [
+      `SpamShield AI — Analysis Result`,
+      `──────────────────────────────`,
+      `Result:          ${lastResult.result.toUpperCase()}`,
+      `Confidence:      ${lastResult.confidence.toFixed(2)}%`,
+      `Word Count:      ${lastResult.word_count}`,
+      `Processing Time: ${lastResult.processing_time_ms}ms`,
+    ].join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Result';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  /* ---- Ctrl+Enter shortcut ---- */
   emailInput.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'Enter') analyzeEmail();
   });

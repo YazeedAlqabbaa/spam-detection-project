@@ -23,11 +23,12 @@ with open(os.path.join(BASE_DIR, "tfidf_vectorizer.pkl"), "rb") as f:
 # Text preprocessing
 # ---------------------------------------------------------------------------
 def preprocess(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"http\S+|www\S+|https\S+", "", text)          # remove URLs
-    text = re.sub(r"\S+@\S+", "", text)                            # remove emails
-    text = re.sub(r"[^a-z0-9\s]", "", text)                       # remove special chars
-    text = re.sub(r"\s+", " ", text).strip()                       # collapse whitespace
+    text = str(text).lower()
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\S+@\S+', '', text)
+    text = re.sub(r'\+?\d[\d -]{8,}\d', '', text)
+    text = re.sub(r'[^a-z\s]', '', text)
+    text = ' '.join(text.split())
     return text
 
 
@@ -57,7 +58,7 @@ def predict():
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
 
     # Model returns string labels: 'spam' or 'ham'
-    is_spam = bool(str(prediction).lower() == "spam")
+    is_spam = bool(str(prediction) == "1" or str(prediction).lower() == "spam")
     confidence = float(np.max(proba)) * 100
 
     return jsonify({
